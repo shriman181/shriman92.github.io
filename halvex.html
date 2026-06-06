@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halvex — Authenticate Every Vehicle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F0E8;
+    --cream-dark: #EDE5D5;
+    --ink: #1A1612;
+    --ink-mid: #3D342B;
+    --ink-light: #7A6E64;
+    --gold: #B8860B;
+    --gold-light: #D4A017;
+    --gold-pale: #F0E4C0;
+    --red-deep: #8B1A1A;
+    --charcoal: #2C2420;
+    --border: rgba(26,22,18,0.12);
+    --border-strong: rgba(26,22,18,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Instrument Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 10px; height: 10px;
+    background: var(--gold);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease, width 0.2s ease, height 0.2s ease;
+    transform: translate(-50%, -50%);
+  }
+  .cursor.hovering {
+    width: 30px; height: 30px;
+    background: transparent;
+    border: 1.5px solid var(--gold);
+  }
+
+  /* Navigation */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 24px 60px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(245,240,232,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+    transition: all 0.3s ease;
+  }
+  nav.scrolled {
+    padding: 16px 60px;
+    background: rgba(245,240,232,0.97);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--gold); }
+  .nav-links {
+    display: flex; gap: 40px; align-items: center;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--gold); }
+  .nav-cta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cream);
+    background: var(--ink);
+    padding: 10px 22px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .nav-cta:hover { background: var(--gold); }
+
+  /* ─── HERO ─── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding-top: 80px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-left {
+    padding: 100px 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-tag::before {
+    content: '';
+    display: block;
+    width: 32px; height: 1px;
+    background: var(--gold);
+  }
+  .hero-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(52px, 5.5vw, 80px);
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--ink);
+    margin-bottom: 28px;
+    letter-spacing: -0.01em;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  .hero-sub {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--ink-light);
+    max-width: 440px;
+    margin-bottom: 48px;
+  }
+  .hero-actions {
+    display: flex; gap: 16px; align-items: center;
+  }
+  .btn-primary {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 14px 32px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--gold); transform: translateY(-1px); }
+  .btn-ghost {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mid);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    transition: color 0.2s, gap 0.2s;
+  }
+  .btn-ghost:hover { color: var(--gold); gap: 14px; }
+  .btn-ghost::after { content: '→'; }
+
+  .hero-stat-strip {
+    margin-top: 64px;
+    padding-top: 40px;
+    border-top: 0.5px solid var(--border);
+    display: flex; gap: 48px;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-top: 6px;
+  }
+
+  .hero-right {
+    position: relative;
+    background: var(--charcoal);
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero-visual {
+    width: 100%; height: 100%;
+    position: absolute; inset: 0;
+  }
+  .vin-overlay {
+    position: relative;
+    z-index: 2;
+    padding: 60px;
+    width: 100%;
+  }
+  .vin-card {
+    background: rgba(245,240,232,0.04);
+    border: 0.5px solid rgba(245,240,232,0.15);
+    padding: 32px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .vin-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+    margin-bottom: 12px;
+  }
+  .vin-string {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 0.1em;
+    color: var(--cream);
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .vin-char {
+    display: inline-block;
+    animation: vinReveal 0.05s ease forwards;
+    opacity: 0;
+  }
+  .vin-char.highlight { color: var(--gold-light); }
+  .vin-status {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 20px;
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #4CAF50;
+    box-shadow: 0 0 8px rgba(76,175,80,0.5);
+    animation: pulse 2s infinite;
+  }
+  .status-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: rgba(245,240,232,0.7);
+  }
+  .confidence-bar-wrap {
+    margin-top: 32px;
+  }
+  .confidence-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.4);
+    margin-bottom: 10px;
+    display: flex; justify-content: space-between;
+  }
+  .confidence-label span { color: var(--gold-light); }
+  .bar-track {
+    height: 2px;
+    background: rgba(245,240,232,0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--gold-light) 100%);
+    animation: fillBar 2.5s 1s ease forwards;
+    width: 0;
+  }
+  .mini-checks {
+    margin-top: 24px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .check-row {
+    display: flex; align-items: center; gap: 12px;
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .check-row:nth-child(1) { animation-delay: 2s; }
+  .check-row:nth-child(2) { animation-delay: 2.4s; }
+  .check-row:nth-child(3) { animation-delay: 2.8s; }
+  .check-icon {
+    width: 18px; height: 18px;
+    border: 0.5px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    color: var(--gold);
+    font-size: 10px;
+  }
+  .check-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: rgba(245,240,232,0.6);
+  }
+  .grid-bg {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(245,240,232,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,240,232,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  @keyframes vinReveal {
+    to { opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes fillBar {
+    to { width: 97%; }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── PROBLEM ─── */
+  .section {
+    padding: 120px 60px;
+  }
+  .section-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-tag::before {
+    content: '';
+    display: block;
+    width: 24px; height: 1px;
+    background: var(--gold);
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 4vw, 58px);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 24px;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+
+  /* Problem section */
+  .problem-section {
+    background: var(--ink);
+    padding: 120px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .problem-section::before {
+    content: '$2M';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 300px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.02);
+    position: absolute;
+    right: -40px; top: -40px;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .problem-section .section-tag { color: var(--gold-light); }
+  .problem-section .section-tag::before { background: var(--gold-light); }
+  .problem-section .section-title { color: var(--cream); }
+
+  .problem-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: rgba(245,240,232,0.08);
+    margin-top: 72px;
+    border: 0.5px solid rgba(245,240,232,0.08);
+  }
+  .problem-card {
+    background: var(--ink);
+    padding: 48px 40px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .problem-card:hover { background: rgba(245,240,232,0.04); }
+  .problem-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 60px;
+    font-weight: 300;
+    color: rgba(184,134,11,0.3);
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  .problem-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--cream);
+    margin-bottom: 14px;
+    line-height: 1.2;
+  }
+  .problem-card-body {
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(245,240,232,0.55);
+  }
+
+  /* ─── SOLUTION ─── */
+  .solution-section {
+    padding: 140px 60px;
+    background: var(--cream);
+  }
+  .solution-intro {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 80px;
+    align-items: start;
+    margin-bottom: 100px;
+  }
+  .solution-desc {
+    font-size: 18px;
+    line-height: 1.75;
+    color: var(--ink-mid);
+    margin-top: 32px;
+  }
+  .solution-aside {
+    padding-top: 80px;
+  }
+  .pull-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.4;
+    color: var(--ink);
+    border-left: 2px solid var(--gold);
+    padding-left: 28px;
+  }
+
+  .pillars {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 0.5px solid var(--border);
+  }
+  .pillar {
+    padding: 48px 36px;
+    border-right: 0.5px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+  .pillar:last-child { border-right: none; }
+  .pillar::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+  .pillar:hover::before { transform: scaleX(1); }
+  .pillar:hover { background: var(--gold-pale); }
+  .pillar-icon {
+    font-size: 28px;
+    margin-bottom: 24px;
+    display: block;
+    line-height: 1;
+  }
+  .pillar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .pillar-desc {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-light);
+  }
+
+  /* ─── HOW IT WORKS ─── */
+  .how-section {
+    background: var(--cream-dark);
+    padding: 120px 60px;
+  }
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    margin-top: 72px;
+    position: relative;
+  }
+  .process-steps::before {
+    content: '';
+    position: absolute;
+    top: 28px; left: 10%; right: 10%;
+    height: 0.5px;
+    background: var(--border-strong);
+    z-index: 0;
+  }
+  .step {
+    text-align: center;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .step-num {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--cream-dark);
+    border: 0.5px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-mid);
+    transition: all 0.3s;
+  }
+  .step:hover .step-num {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: white;
+  }
+  .step-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .step-desc {
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--ink-light);
+  }
+
+  /* ─── MARKET ─── */
+  .market-section {
+    background: var(--charcoal);
+    padding: 120px 60px;
+    color: var(--cream);
+    position: relative;
+    overflow: hidden;
+  }
+  .market-section .section-title { color: var(--cream); }
+  .market-section .section-tag { color: var(--gold-light); }
+  .market-section .section-tag::before { background: var(--gold-light); }
+  .market-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    margin-top: 72px;
+    align-items: start;
+  }
+  .market-nums {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .market-stat {
+    padding-bottom: 40px;
+    border-bottom: 0.5px solid rgba(245,240,232,0.1);
+  }
+  .market-stat:last-child { border-bottom: none; padding-bottom: 0; }
+  .market-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 56px;
+    font-weight: 300;
+    color: var(--gold-light);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .market-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.5);
+  }
+  .market-body {
+    font-size: 15px;
+    line-height: 1.75;
+    color: rgba(245,240,232,0.7);
+    margin-top: 12px;
+  }
+  .market-right {
+    padding-top: 16px;
+  }
+  .market-right p {
+    font-size: 18px;
+    line-height: 1.75;
+    color: rgba(245,240,232,0.75);
+    margin-bottom: 32px;
+  }
+  .feature-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 20px;
+    margin-top: 40px;
+  }
+  .feature-list li {
+    display: flex; gap: 16px; align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.65;
+    color: rgba(245,240,232,0.65);
+  }
+  .feature-list li::before {
+    content: '—';
+    color: var(--gold);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ─── FOUNDER ─── */
+  .founder-section {
+    background: var(--cream);
+    padding: 140px 60px;
+  }
+  .founder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 100px;
+    align-items: center;
+    margin-top: 72px;
+  }
+  .founder-visual {
+    position: relative;
+  }
+  .founder-frame {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: var(--cream-dark);
+    border: 0.5px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .founder-initials {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 96px;
+    font-weight: 300;
+    color: rgba(184,134,11,0.15);
+    letter-spacing: -0.02em;
+  }
+  .founder-name-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 32px;
+    background: linear-gradient(transparent, rgba(26,22,18,0.85));
+  }
+  .founder-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--cream);
+    line-height: 1;
+  }
+  .founder-role {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-top: 8px;
+  }
+  .gold-accent-line {
+    width: 48px; height: 2px;
+    background: var(--gold);
+    margin-bottom: 24px;
+  }
+  .founder-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 30px;
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.4;
+    color: var(--ink);
+    margin-bottom: 32px;
+  }
+  .founder-bio {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    margin-bottom: 40px;
+  }
+  .founder-credentials {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .credential {
+    display: flex; gap: 16px; align-items: center;
+    padding: 14px 20px;
+    border: 0.5px solid var(--border);
+    background: var(--cream-dark);
+    font-size: 13px;
+  }
+  .credential-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .credential-text { color: var(--ink-mid); line-height: 1.4; }
+  .credential-text strong {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 3px;
+    font-weight: 400;
+  }
+
+  /* ─── CTA ─── */
+  .cta-section {
+    background: var(--gold);
+    padding: 120px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: 'HALVEX';
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 200px;
+    font-weight: 300;
+    color: rgba(26,22,18,0.06);
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+  }
+  .cta-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(40px, 5vw, 68px);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .cta-sub {
+    font-size: 16px;
+    color: var(--ink-mid);
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .cta-actions {
+    display: flex; gap: 16px; justify-content: center;
+    position: relative;
+  }
+  .btn-dark {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--cream);
+    padding: 16px 40px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-dark:hover { background: var(--charcoal); transform: translateY(-2px); }
+  .btn-outline-dark {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ink);
+    padding: 16px 40px;
+    border: 1.5px solid var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+  }
+  .btn-outline-dark:hover {
+    background: var(--ink);
+    color: var(--gold);
+    transform: translateY(-2px);
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    background: var(--ink);
+    padding: 64px 60px 40px;
+    color: rgba(245,240,232,0.5);
+  }
+  .footer-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding-bottom: 48px;
+    border-bottom: 0.5px solid rgba(245,240,232,0.08);
+    margin-bottom: 40px;
+  }
+  .footer-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--cream);
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .footer-brand span { color: var(--gold); }
+  .footer-tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.35);
+  }
+  .footer-links-group { }
+  .footer-group-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(245,240,232,0.35);
+    margin-bottom: 20px;
+  }
+  .footer-links {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .footer-links a {
+    font-size: 13px;
+    color: rgba(245,240,232,0.6);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--gold-light); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Scroll animations ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  @media (max-width: 1024px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { min-height: 500px; }
+    .problem-grid, .pillars { grid-template-columns: 1fr 1fr; }
+    .process-steps { grid-template-columns: 1fr 1fr; }
+    .process-steps::before { display: none; }
+    .market-grid, .solution-intro, .founder-grid { grid-template-columns: 1fr; }
+    nav { padding: 20px 30px; }
+    .nav-links { display: none; }
+    .section, .problem-section, .solution-section, .how-section,
+    .market-section, .founder-section, .cta-section { padding: 80px 30px; }
+    footer { padding: 60px 30px 30px; }
+    .footer-top { flex-direction: column; gap: 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">Halv<span>e</span>x</a>
+  <ul class="nav-links">
+    <li><a href="#solution">Solution</a></li>
+    <li><a href="#how">Process</a></li>
+    <li><a href="#market">Market</a></li>
+    <li><a href="#founder">Founder</a></li>
+    <li><a href="#contact" class="nav-cta">Request Access</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="home">
+  <div class="hero-left">
+    <div class="hero-tag">Classic Car Authentication</div>
+    <h1 class="hero-headline">
+      Every Chassis<br>Has a <em>Truth</em><br>To Tell.
+    </h1>
+    <p class="hero-sub">
+      Halvex is the authentication intelligence layer for the classic and collector car market — combining AI-driven VIN history tracing, photographic condition assessment, provenance documentation, and market valuation modelling.
+    </p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">Request Access</a>
+      <a href="#solution" class="btn-ghost">See how it works</a>
+    </div>
+    <div class="hero-stat-strip">
+      <div class="stat-item">
+        <div class="stat-num">$2M</div>
+        <div class="stat-label">Single fraud event</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">$26B</div>
+        <div class="stat-label">Global collector market</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">0</div>
+        <div class="stat-label">Scalable auth layers</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="grid-bg"></div>
+    <div class="vin-overlay">
+      <div class="vin-card">
+        <div class="vin-card-label">Vehicle Identification — Authentication Scan</div>
+        <div class="vin-string" id="vinDisplay"></div>
+        <div class="vin-status">
+          <div class="status-dot"></div>
+          <span class="status-text">Cross-referencing 14 historical databases</span>
+        </div>
+        <div class="confidence-bar-wrap">
+          <div class="confidence-label">
+            Authentication Confidence <span>97.4%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill"></div></div>
+        </div>
+      </div>
+      <div class="mini-checks">
+        <div class="check-row">
+          <div class="check-icon">✓</div>
+          <span class="check-text">Factory build sheet — Maranello archives matched</span>
+        </div>
+        <div class="check-row">
+          <div class="check-icon">✓</div>
+          <span class="check-text">Photographic provenance — 1972 Concorso d'Eleganza</span>
+        </div>
+        <div class="check-row">
+          <div class="check-icon">✓</div>
+          <span class="check-text">Engine number continuity — original block confirmed</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem-section" id="problem">
+  <div class="section-tag">The Problem</div>
+  <h2 class="section-title">A $26 Billion Market<br>Running on <em>Trust Alone.</em></h2>
+
+  <div class="problem-grid">
+    <div class="problem-card reveal">
+      <div class="problem-number">01</div>
+      <div class="problem-card-title">No Scalable Verification</div>
+      <p class="problem-card-body">Authentication today relies on individual experts, marque specialists, and fragmented club registries. There is no universal, scalable layer that can assess a vehicle's provenance objectively at transaction speed.</p>
+    </div>
+    <div class="problem-card reveal reveal-delay-1">
+      <div class="problem-number">02</div>
+      <div class="problem-card-title">Identity Fraud Is Rampant</div>
+      <p class="problem-card-body">Clone cars, VIN swaps, and mis-stamped chassis are endemic. A convincingly presented Ferrari clone can transact at $2M+ before any discrepancy surfaces — often in a different jurisdiction entirely.</p>
+    </div>
+    <div class="problem-card reveal reveal-delay-2">
+      <div class="problem-number">03</div>
+      <div class="problem-card-title">Fragmented Documentation</div>
+      <p class="problem-card-body">Ownership history is scattered across auction catalogues, rally registration books, private correspondence, and manufacturer archives in multiple countries and languages. No one aggregates it systematically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="solution-section" id="solution">
+  <div class="solution-intro">
+    <div>
+      <div class="section-tag">The Solution</div>
+      <h2 class="section-title">Authentication<br>as <em>Infrastructure.</em></h2>
+      <p class="solution-desc">
+        Halvex operates as an intelligence platform — not an appraisal service. We build a structured, computable record of each vehicle's identity: where it was built, every hand it has passed through, every significant event in its life, and what the market should rationally price it at.
+      </p>
+      <p class="solution-desc" style="margin-top: 20px;">
+        Our AI models are trained on auction outcomes, factory build data, condition photographs, and provenance documentation going back to 1945.
+      </p>
+    </div>
+    <div class="solution-aside reveal">
+      <p class="pull-quote">"The difference between a $400K car and a $2M car is rarely the metal. It's the paper trail — and its verifiability."</p>
+    </div>
+  </div>
+
+  <div class="pillars">
+    <div class="pillar reveal">
+      <span class="pillar-icon">🔎</span>
+      <div class="pillar-title">VIN History Tracing</div>
+      <p class="pillar-desc">Deep cross-referencing of chassis, engine, and body numbers against manufacturer archives, club registries, DVLA/DMV databases, and historical auction records across 14 jurisdictions.</p>
+    </div>
+    <div class="pillar reveal reveal-delay-1">
+      <span class="pillar-icon">📸</span>
+      <div class="pillar-title">Photographic Assessment</div>
+      <p class="pillar-desc">Computer vision trained on 200,000+ collector car images evaluates panel gaps, paint originality, casting marks, interior wear patterns, and period-correct components from submitted photography.</p>
+    </div>
+    <div class="pillar reveal reveal-delay-2">
+      <span class="pillar-icon">📄</span>
+      <div class="pillar-title">Provenance Documentation</div>
+      <p class="pillar-desc">Structured aggregation of ownership history, competition entries, restoration invoices, factory correspondence, and press appearances into a single, tamper-evident digital dossier.</p>
+    </div>
+    <div class="pillar reveal reveal-delay-3">
+      <span class="pillar-icon">📊</span>
+      <div class="pillar-title">Market Valuation</div>
+      <p class="pillar-desc">Regression models built on 60,000+ auction results deliver defensible fair-market estimates adjusted for provenance quality, condition grade, market cycle, and comparable sales velocity.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-tag">Process</div>
+  <h2 class="section-title">Five Steps from<br><em>Submission to Certificate.</em></h2>
+
+  <div class="process-steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div class="step-title">Vehicle Submission</div>
+      <p class="step-desc">Owner or dealer submits VIN, serial numbers, and a structured photography package via the Halvex portal.</p>
+    </div>
+    <div class="step reveal reveal-delay-1">
+      <div class="step-num">02</div>
+      <div class="step-title">Database Cross-Reference</div>
+      <p class="step-desc">Automated sweep of 14 historical databases, manufacturer archives, and global auction records.</p>
+    </div>
+    <div class="step reveal reveal-delay-2">
+      <div class="step-num">03</div>
+      <div class="step-title">AI Condition Analysis</div>
+      <p class="step-desc">Computer vision assessment of submitted photographs against model-specific reference libraries.</p>
+    </div>
+    <div class="step reveal reveal-delay-3">
+      <div class="step-num">04</div>
+      <div class="step-title">Provenance Compilation</div>
+      <p class="step-desc">Human-verified aggregation of ownership chain, competition history, and documentation into a structured dossier.</p>
+    </div>
+    <div class="step reveal reveal-delay-4">
+      <div class="step-num">05</div>
+      <div class="step-title">Certificate Issued</div>
+      <p class="step-desc">A blockchain-anchored authentication certificate with confidence score, condition grade, and market valuation range.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MARKET -->
+<section class="market-section" id="market">
+  <div class="section-tag">Market</div>
+  <h2 class="section-title">The Infrastructure<br>a Market of This Scale <em>Demands.</em></h2>
+
+  <div class="market-grid">
+    <div class="market-nums">
+      <div class="market-stat reveal">
+        <div class="market-num">$26B+</div>
+        <div class="market-stat-label">Global classic car market</div>
+        <p class="market-body">The collector car market transacts over $26 billion annually at auction alone, with an equal volume in private treaty — none of it with a standardised authentication layer.</p>
+      </div>
+      <div class="market-stat reveal reveal-delay-1">
+        <div class="market-num">15–30%</div>
+        <div class="market-stat-label">Provenance premium on verified cars</div>
+        <p class="market-body">Cars with documented, verifiable provenance consistently realise a 15–30% premium at major auction houses vs. comparable unverified examples.</p>
+      </div>
+      <div class="market-stat reveal reveal-delay-2">
+        <div class="market-num">~40%</div>
+        <div class="market-stat-label">Ferrari 250s with disputed provenance</div>
+        <p class="market-body">Industry estimates suggest a significant proportion of the most valuable collector cars carry provenance gaps, inconsistencies, or outright misrepresentation.</p>
+      </div>
+    </div>
+
+    <div class="market-right reveal">
+      <p>The market currently relies on a cottage industry of individual marque experts, auction house specialists, and marque clubs. This is slow, expensive, non-scalable, and subject to conflicts of interest.</p>
+      <p>Halvex is the first attempt to build a systematic, AI-augmented authentication layer that can operate at market scale — applicable across marques, borders, and transaction types.</p>
+      <ul class="feature-list">
+        <li>Insurers need defensible valuations for agreed-value policies on high-value collector cars</li>
+        <li>Finance providers need authenticated collateral assessments before extending credit</li>
+        <li>Auction houses need pre-sale authentication to protect their reputations and buyer relationships</li>
+        <li>Private buyers need independent verification uncorrupted by seller interest</li>
+        <li>Estate attorneys need objective appraisals for succession and inheritance purposes</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDER -->
+<section class="founder-section" id="founder">
+  <div class="section-tag">Founder</div>
+  <h2 class="section-title">The Person<br>Building <em>Halvex.</em></h2>
+
+  <div class="founder-grid">
+    <div class="founder-visual reveal">
+      <div class="founder-frame">
+        <div class="founder-initials">SR</div>
+        <div class="founder-name-overlay">
+          <div class="founder-name">Saloni Rakholiya</div>
+          <div class="founder-role">Founder & CEO — Halvex</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="founder-content reveal reveal-delay-1">
+      <div class="gold-accent-line"></div>
+      <p class="founder-quote">"The classic car market is a trust economy masquerading as a financial one. We're building the infrastructure to make trust computable."</p>
+      <p class="founder-bio">
+        Saloni Rakholiya founded Halvex after observing first-hand how fragmented and opaque the authentication process was for high-value collector vehicles. With a background spanning automotive history, data engineering, and market intelligence, she identified that the gap wasn't expertise — it was infrastructure.
+      </p>
+      <p class="founder-bio">
+        The insight at the core of Halvex: every fraud in this market is ultimately an information asymmetry problem. The seller knows something the buyer doesn't. Halvex closes that gap systematically — not car by car with human specialists, but at scale with a computable, defensible authentication record for every significant vehicle.
+      </p>
+      <div class="founder-credentials">
+        <div class="credential">
+          <div class="credential-icon">🏛</div>
+          <div class="credential-text">
+            <strong>Domain</strong>
+            Classic & collector car market intelligence, automotive provenance research
+          </div>
+        </div>
+        <div class="credential">
+          <div class="credential-icon">🤖</div>
+          <div class="credential-text">
+            <strong>Technology</strong>
+            Computer vision for condition assessment, NLP for document extraction, valuation modelling
+          </div>
+        </div>
+        <div class="credential">
+          <div class="credential-icon">📍</div>
+          <div class="credential-text">
+            <strong>Building</strong>
+            Halvex — Authenticate Every Vehicle
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <h2 class="cta-title">Ready to authenticate<br>your vehicle?</h2>
+  <p class="cta-sub">Request early access — we're onboarding dealers, auction houses, and private collectors.</p>
+  <div class="cta-actions">
+    <a href="mailto:hello@halvex.io" class="btn-dark">Request Access</a>
+    <a href="#solution" class="btn-outline-dark">Learn More</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand">Halv<span>e</span>x</div>
+      <div class="footer-tagline">Authenticate Every Vehicle</div>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-group-title">Platform</div>
+      <ul class="footer-links">
+        <li><a href="#solution">Solution</a></li>
+        <li><a href="#how">Process</a></li>
+        <li><a href="#market">Market</a></li>
+      </ul>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-group-title">Company</div>
+      <ul class="footer-links">
+        <li><a href="#founder">Founder</a></li>
+        <li><a href="mailto:hello@halvex.io">Contact</a></li>
+        <li><a href="#">Privacy Policy</a></li>
+      </ul>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-group-title">Contact</div>
+      <ul class="footer-links">
+        <li><a href="mailto:hello@halvex.io">hello@halvex.io</a></li>
+        <li><a href="#">LinkedIn</a></li>
+        <li><a href="#contact">Request Access</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 Halvex. All rights reserved.</span>
+    <span>Classic & Collector Car Authentication</span>
+  </div>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, button, .pillar, .problem-card, .step').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
+  });
+
+  // Nav scroll
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 60) navbar.classList.add('scrolled');
+    else navbar.classList.remove('scrolled');
+  });
+
+  // VIN animation
+  const vin = 'ZFF83CLA5J0237918';
+  const highlights = [3,4,5,6,7,8]; // model/engine portion
+  const display = document.getElementById('vinDisplay');
+  vin.split('').forEach((char, i) => {
+    const span = document.createElement('span');
+    span.className = 'vin-char' + (highlights.includes(i) ? ' highlight' : '');
+    span.textContent = char;
+    span.style.animationDelay = (0.3 + i * 0.06) + 's';
+    display.appendChild(span);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
